@@ -6,3 +6,5 @@ Pocetak za BigData => https://www.linkedin.com/pulse/kako-da-krenem-vrtim-big-da
 
 Azure Data Factory documentation => https://docs.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory-portal 
 GitHub => https://github.com/Ratomir/ADFv2 
+
+Best practices with ADFv2 and Git => https://docs.microsoft.com/en-us/azure/data-factory/author-visually#best-practices-for-git-integration
