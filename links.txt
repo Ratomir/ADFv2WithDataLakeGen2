@@ -1,0 +1,8 @@
+Set podataka => https://grouplens.org/datasets/movielens/
+Generisanje podataka => https://www.generatedata.com/#t1 
+Hive scripts from Microsoft => https://github.com/Azure/Azure-MachineLearning-DataScience/tree/master/Misc/DataScienceProcess/DataScienceScripts 
+Load data from hive scripts => https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/move-hive-tables
+Pocetak za BigData => https://www.linkedin.com/pulse/kako-da-krenem-vrtim-big-data-slavimir-vesic-1f/?published=t 
+
+Azure Data Factory documentation => https://docs.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory-portal 
+GitHub => https://github.com/Ratomir/ADFv2 
