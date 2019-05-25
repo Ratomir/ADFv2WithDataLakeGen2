@@ -1,0 +1,48 @@
+{
+	"name": "adl_top10",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adl_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureDataLakeStoreFile",
+		"structure": [
+			{
+				"name": "Prop_0",
+				"type": "String",
+				"description": "movieid"
+			},
+			{
+				"name": "Prop_1",
+				"type": "String",
+				"description": "relevance"
+			},
+			{
+				"name": "Prop_2",
+				"type": "String",
+				"description": "tags"
+			},
+			{
+				"name": "Prop_3",
+				"type": "String",
+				"description": "title"
+			}
+		],
+		"typeProperties": {
+			"format": {
+				"type": "TextFormat",
+				"columnDelimiter": ",",
+				"rowDelimiter": "\n",
+				"quoteChar": "\"",
+				"nullValue": "\\N",
+				"encodingName": null,
+				"treatEmptyAsNull": true,
+				"skipLineCount": 0,
+				"firstRowAsHeader": false
+			},
+			"fileName": "top10RelevanceMovies.csv",
+			"folderPath": "datalake/input"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,58 @@
+{
+	"name": "Product_ProductCategory_InnerJoin",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ast_product",
+						"type": "DatasetReference"
+					},
+					"name": "product",
+					"script": "source(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'table') ~> product"
+				},
+				{
+					"dataset": {
+						"referenceName": "ast_productcategory",
+						"type": "DatasetReference"
+					},
+					"name": "productcategory",
+					"script": "source(output(\n\t\tProductCategoryID as integer,\n\t\tParentProductCategoryID as integer,\n\t\tName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'table') ~> productcategory"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ProductCategoryJoin",
+						"type": "DatasetReference"
+					},
+					"name": "ProductCategorySink",
+					"script": "Filter1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tmapColumn(\n\t\tProductID,\n\t\tName = product@Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize,\n\t\tWeight,\n\t\tProductCategoryID = product@ProductCategoryID,\n\t\tProductModelID,\n\t\tSellStartDate,\n\t\tSellEndDate,\n\t\tDiscontinuedDate,\n\t\tThumbNailPhoto,\n\t\tThumbnailPhotoFileName,\n\t\tModifiedDate = product@ModifiedDate,\n\t\tParentProductCategoryID,\n\t\tPC_Name = productcategory@Name,\n\t\tPC_ModifiedDate = productcategory@ModifiedDate\n\t)) ~> ProductCategorySink"
+				},
+				{
+					"dataset": {
+						"referenceName": "ast_ProductWithCategory",
+						"type": "DatasetReference"
+					},
+					"name": "SinkToSQL",
+					"script": "Filter1 sink(input(\n\t\tId as integer,\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tLastPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as double,\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as string,\n\t\tThumbnailPhotoFileName as string,\n\t\tModifiedDate as timestamp,\n\t\tParentProductCategoryID as integer,\n\t\tPC_Name as string,\n\t\tPC_ModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'table',\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tmapColumn(\n\t\tProductID,\n\t\tName = product@Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tLastPrice = ListPrice,\n\t\tSize,\n\t\tWeight,\n\t\tProductCategoryID = product@ProductCategoryID,\n\t\tProductModelID,\n\t\tSellStartDate,\n\t\tSellEndDate,\n\t\tDiscontinuedDate,\n\t\tThumbnailPhotoFileName,\n\t\tModifiedDate = product@ModifiedDate,\n\t\tParentProductCategoryID,\n\t\tPC_Name = productcategory@Name,\n\t\tPC_ModifiedDate = productcategory@ModifiedDate\n\t)) ~> SinkToSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoinProduct",
+					"script": "product, productcategory join(product@ProductCategoryID == productcategory@ProductCategoryID,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> JoinProduct"
+				},
+				{
+					"name": "SortJoin",
+					"script": "JoinProduct sort(desc(ProductModelID, true)) ~> SortJoin"
+				},
+				{
+					"name": "Filter1",
+					"script": "SortJoin filter(StandardCost > 1000) ~> Filter1"
+				}
+			]
+		}
+	}
+}

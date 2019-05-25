@@ -1,0 +1,15 @@
+{
+	"name": "abs_hdinsightsconf_bulk",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "hdinsightsconf",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureBlob",
+		"typeProperties": {
+			"fileName": "",
+			"folderPath": "datastore/input"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

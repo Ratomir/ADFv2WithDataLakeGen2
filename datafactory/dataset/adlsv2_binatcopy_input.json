@@ -1,0 +1,15 @@
+{
+	"name": "adlsv2_binatcopy_input",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_hd_conf_19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureBlobFSFile",
+		"typeProperties": {
+			"fileName": "",
+			"folderPath": "datastore/input"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

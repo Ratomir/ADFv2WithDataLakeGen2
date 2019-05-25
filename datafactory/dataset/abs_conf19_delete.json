@@ -1,0 +1,28 @@
+{
+	"name": "abs_conf19_delete",
+	"properties": {
+		"description": "Connect to your storage store to delete files.",
+		"linkedServiceName": {
+			"referenceName": "abs_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FolderPath": {
+				"type": "String"
+			}
+		},
+		"type": "AzureBlob",
+		"typeProperties": {
+			"fileName": "*",
+			"folderPath": {
+				"value": "@dataset().FolderPath",
+				"type": "Expression"
+			},
+			"modifiedDatetimeEnd": {
+				"value": "@addminutes(pipeline().TriggerTime, -1)",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

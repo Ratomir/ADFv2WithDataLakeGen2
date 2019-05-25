@@ -1,0 +1,40 @@
+{
+	"name": "asd_stageusers",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asd_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureSqlTable",
+		"structure": [
+			{
+				"name": "Name",
+				"type": "String"
+			},
+			{
+				"name": "Email",
+				"type": "String"
+			},
+			{
+				"name": "StreetAddress",
+				"type": "String"
+			},
+			{
+				"name": "City",
+				"type": "String"
+			},
+			{
+				"name": "Country",
+				"type": "String"
+			},
+			{
+				"name": "UserId",
+				"type": "Int32"
+			}
+		],
+		"typeProperties": {
+			"tableName": "[dbo].[StageUsers]"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

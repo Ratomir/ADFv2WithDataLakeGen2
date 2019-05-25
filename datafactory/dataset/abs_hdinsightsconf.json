@@ -1,0 +1,23 @@
+{
+	"name": "abs_hdinsightsconf",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "hdinsightsconf",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"location": {
+				"type": "String"
+			}
+		},
+		"type": "AzureBlob",
+		"typeProperties": {
+			"fileName": {
+				"value": "@dataset().location",
+				"type": "Expression"
+			},
+			"folderPath": "datastore"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

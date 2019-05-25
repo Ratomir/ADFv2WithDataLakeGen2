@@ -1,0 +1,63 @@
+{
+	"name": "adl_input_movies",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adl_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureDataLakeStoreFile",
+		"structure": [
+			{
+				"name": "Prop_0",
+				"type": "String",
+				"description": "movieid"
+			},
+			{
+				"name": "Prop_1",
+				"type": "String",
+				"description": "movietitle"
+			},
+			{
+				"name": "Prop_2",
+				"type": "String",
+				"description": "movieratings"
+			},
+			{
+				"name": "Prop_3",
+				"type": "String",
+				"description": "imdbid"
+			},
+			{
+				"name": "Prop_4",
+				"type": "String",
+				"description": "tmdbid"
+			},
+			{
+				"name": "Prop_5",
+				"type": "String",
+				"description": "movieimdblink"
+			},
+			{
+				"name": "Prop_6",
+				"type": "String",
+				"description": "movietmdblink"
+			}
+		],
+		"typeProperties": {
+			"format": {
+				"type": "TextFormat",
+				"columnDelimiter": ",",
+				"rowDelimiter": "\n",
+				"quoteChar": "\"",
+				"nullValue": "\\N",
+				"encodingName": null,
+				"treatEmptyAsNull": true,
+				"skipLineCount": 0,
+				"firstRowAsHeader": false
+			},
+			"fileName": "movies.csv",
+			"folderPath": "datalake/input"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,298 @@
+{
+	"name": "CopyDataToAnalytics",
+	"properties": {
+		"activities": [
+			{
+				"name": "StartCopyToAnalytics1",
+				"type": "SqlServerStoredProcedure",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_insertIntoLogs]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"startDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "EndCopyToAnalytics",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "If Condition1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "If Condition2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_finishAdf]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"endDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "IfFileExistsMovies",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "StartCopyToAnalytics1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "adlsv2_binaryfile",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "hive/warehouse/managed/movies.db/fullmovies/base_0000001/000000_0"
+						}
+					},
+					"fieldList": [
+						"exists"
+					]
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "IfFileExistsMovies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('IfFileExistsMovies').output.exists",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "CopyToAnalytics",
+							"type": "Copy",
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "AzureBlobFSSource",
+									"recursive": true
+								},
+								"sink": {
+									"type": "AzureDataLakeStoreSink"
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "adlsv2_binaryfile",
+									"type": "DatasetReference",
+									"parameters": {
+										"location": "hive/warehouse/managed/movies.db/fullmovies/base_0000001/000000_0"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "adl_input",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": "movies"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "IfFileExistsTop10RelevanceMovies",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "StartCopyToAnalytics1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "adlsv2_binaryfile",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "hive/warehouse/managed/movies.db/top10relevancetagpermovie/base_0000001/000000_0"
+						}
+					},
+					"fieldList": [
+						"exists"
+					]
+				}
+			},
+			{
+				"name": "If Condition2",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "IfFileExistsTop10RelevanceMovies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('IfFileExistsTop10RelevanceMovies').output.exists",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy Data1",
+							"type": "Copy",
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 3,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"typeProperties": {
+								"source": {
+									"type": "AzureBlobFSSource",
+									"recursive": true
+								},
+								"sink": {
+									"type": "AzureDataLakeStoreSink"
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "adlsv2_binaryfile",
+									"type": "DatasetReference",
+									"parameters": {
+										"location": "hive/warehouse/managed/movies.db/top10relevancetagpermovie/base_0000001/000000_0"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "adl_input",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": "top10RelevanceMovies"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

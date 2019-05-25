@@ -1,0 +1,32 @@
+{
+	"name": "AmazonS3forAzure",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AmazonS3",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"location": {
+				"type": "String"
+			}
+		},
+		"type": "AmazonS3Object",
+		"typeProperties": {
+			"format": {
+				"type": "TextFormat",
+				"columnDelimiter": "|",
+				"rowDelimiter": "",
+				"nullValue": "\\N",
+				"treatEmptyAsNull": true,
+				"skipLineCount": 0,
+				"firstRowAsHeader": true
+			},
+			"key": {
+				"value": "@dataset().location",
+				"type": "Expression"
+			},
+			"bucketName": "conf19"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

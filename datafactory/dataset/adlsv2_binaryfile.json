@@ -1,0 +1,23 @@
+{
+	"name": "adlsv2_binaryfile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_hd_conf_19",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"location": {
+				"type": "string"
+			}
+		},
+		"type": "AzureBlobFSFile",
+		"typeProperties": {
+			"fileName": {
+				"value": "@dataset().location",
+				"type": "Expression"
+			},
+			"folderPath": "datastore"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

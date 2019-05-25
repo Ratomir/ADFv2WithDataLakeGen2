@@ -1,0 +1,342 @@
+{
+	"name": "CopyFileFromAWS3Bucket",
+	"properties": {
+		"activities": [
+			{
+				"name": "Links",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "links.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/links.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/links.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Movies",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "movies.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/movies.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/movies.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Genome-scores",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "genome-scores.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/genome-scores.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/genome-scores.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Tags",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "tags.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/tags.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/tags.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Genome-tags",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "genome-tags.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/genome-tags.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/genome-tags.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Ratings",
+				"type": "Copy",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "loadFile",
+						"value": "ratings.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": false
+					},
+					"sink": {
+						"type": "BlobSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/ratings.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "abs_hdinsightsconf",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "input/ratings.csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "LoadDataIntoTables",
+				"type": "HDInsightHive",
+				"dependsOn": [
+					{
+						"activity": "Links",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Movies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Genome-scores",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Tags",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Genome-tags",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Ratings",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"scriptPath": "scripts/loadDataFromFiles.hql",
+					"getDebugInfo": "Always",
+					"scriptLinkedService": {
+						"referenceName": "abs_conf19",
+						"type": "LinkedServiceReference"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "hdinsight",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "AWS"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

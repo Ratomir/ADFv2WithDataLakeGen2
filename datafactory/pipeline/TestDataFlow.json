@@ -1,0 +1,140 @@
+{
+	"name": "TestDataFlow",
+	"properties": {
+		"activities": [
+			{
+				"name": "Product_ProductCategory_InnerJoin",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "StartDataFlow",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Product_ProductCategory_InnerJoin",
+						"type": "DataFlowReference"
+					}
+				}
+			},
+			{
+				"name": "StartDataFlow",
+				"type": "SqlServerStoredProcedure",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_insertIntoLogs]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"startDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "EndDataFlow",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Product_ProductCategory_InnerJoin",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_finishAdf]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"endDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "DataFlow"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

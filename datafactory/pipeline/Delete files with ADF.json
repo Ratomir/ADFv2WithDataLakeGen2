@@ -1,0 +1,48 @@
+{
+	"name": "Delete files with ADF",
+	"properties": {
+		"description": "Please input a folder path as the parameter for this pipeline, and the pipeline will delete files which were last modified more than 30 days ago under the particular folder path.",
+		"activities": [
+			{
+				"name": "DeleteFiles",
+				"type": "Delete",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "abs_conf19_delete",
+						"type": "DatasetReference",
+						"parameters": {
+							"FolderPath": {
+								"value": "@pipeline().parameters.FolderPath",
+								"type": "Expression"
+							}
+						}
+					},
+					"recursive": true,
+					"logStorageSettings": {
+						"linkedServiceName": {
+							"referenceName": "abs_conf19",
+							"type": "LinkedServiceReference"
+						},
+						"path": "deletelogs"
+					},
+					"enableLogging": true
+				}
+			}
+		],
+		"concurrency": 2,
+		"parameters": {
+			"FolderPath": {
+				"type": "String",
+				"defaultValue": "/<mycontainer>/<myfolder>/"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

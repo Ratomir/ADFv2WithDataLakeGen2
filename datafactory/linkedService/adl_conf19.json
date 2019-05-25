@@ -1,0 +1,13 @@
+{
+	"name": "adl_conf19",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"type": "AzureDataLakeStore",
+		"typeProperties": {
+			"dataLakeStoreUri": "https://conf19.azuredatalakestore.net/webhdfs/v1",
+			"tenant": "d7dedc1c-5e28-4c3b-a173-fe24b1923684",
+			"subscriptionId": "1fca6fdb-1225-4efd-8dcd-1173fe3f4765",
+			"resourceGroupName": "rg-conf"
+		}
+	}
+}

@@ -1,0 +1,31 @@
+{
+	"name": "at_top10RelevanceTagPerMovie",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ats_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureTable",
+		"structure": [
+			{
+				"name": "id",
+				"type": "Int32"
+			},
+			{
+				"name": "relevance",
+				"type": "Double"
+			},
+			{
+				"name": "tags",
+				"type": "String"
+			},
+			{
+				"name": "title"
+			}
+		],
+		"typeProperties": {
+			"tableName": "top10RelevanceTagPerMovie"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

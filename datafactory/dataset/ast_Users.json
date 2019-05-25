@@ -1,0 +1,52 @@
+{
+	"name": "ast_Users",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asd_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "AzureSqlTable",
+		"structure": [
+			{
+				"name": "Id",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			},
+			{
+				"name": "Name",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			},
+			{
+				"name": "Email",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			},
+			{
+				"name": "StreetAddress",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			},
+			{
+				"name": "City",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			},
+			{
+				"name": "Country",
+				"type": "String",
+				"precision": 255,
+				"scale": 255
+			}
+		],
+		"typeProperties": {
+			"tableName": "sourceTbl"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

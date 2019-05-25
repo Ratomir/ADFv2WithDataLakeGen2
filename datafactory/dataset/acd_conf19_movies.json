@@ -1,0 +1,36 @@
+{
+	"name": "acd_conf19_movies",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "acd_conf19",
+			"type": "LinkedServiceReference"
+		},
+		"type": "DocumentDbCollection",
+		"structure": [
+			{
+				"name": "movieid",
+				"type": "Int32"
+			},
+			{
+				"name": "title",
+				"type": "String"
+			},
+			{
+				"name": "ratings",
+				"type": "Double"
+			},
+			{
+				"name": "imdblink",
+				"type": "String"
+			},
+			{
+				"name": "tmdblink",
+				"type": "String"
+			}
+		],
+		"typeProperties": {
+			"collectionName": "movies"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

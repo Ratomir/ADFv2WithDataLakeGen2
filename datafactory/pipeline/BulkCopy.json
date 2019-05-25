@@ -1,0 +1,288 @@
+{
+	"name": "BulkCopy",
+	"properties": {
+		"activities": [
+			{
+				"name": "BulkCopy",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "StartBulkCopyAWS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"source": {
+						"type": "FileSystemSource",
+						"recursive": true
+					},
+					"sink": {
+						"type": "AzureBlobFSSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonS3forAzure",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": "forazure/*"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "adlsv2_binatcopy_input",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "LoadData",
+				"type": "HDInsightHive",
+				"dependsOn": [
+					{
+						"activity": "BulkCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "description",
+						"value": "Data has been loaded"
+					}
+				],
+				"typeProperties": {
+					"scriptPath": "scripts/loadDataFromFiles.hql",
+					"getDebugInfo": "None",
+					"scriptLinkedService": {
+						"referenceName": "adls_hd_conf_19",
+						"type": "LinkedServiceReference"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "hdinsightclusterv2",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Prepare movies",
+				"type": "HDInsightHive",
+				"dependsOn": [
+					{
+						"activity": "LoadData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "description",
+						"value": "Movies loaded"
+					}
+				],
+				"typeProperties": {
+					"scriptPath": "scripts/prepareMovies.hql",
+					"getDebugInfo": "None",
+					"scriptLinkedService": {
+						"referenceName": "adls_hd_conf_19",
+						"type": "LinkedServiceReference"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "hdinsightclusterv2",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "StartBulkCopyAWS",
+				"type": "SqlServerStoredProcedure",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_insertIntoLogs]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"startDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "EndBulkCopy",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Top 10 relevance movies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[sp_finishAdf]",
+					"storedProcedureParameters": {
+						"dataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"endDate": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "asd_LogADF",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute CopyDataToAnaytics",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "EndBulkCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "CopyDataToAnalytics",
+						"type": "PipelineReference"
+					}
+				}
+			},
+			{
+				"name": "Top 10 relevance movies",
+				"type": "HDInsightHive",
+				"dependsOn": [
+					{
+						"activity": "Prepare movies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "description",
+						"value": "Top10 movies founded"
+					}
+				],
+				"typeProperties": {
+					"scriptPath": "scripts/findTop10ReleavanceTagPerMovie.hql",
+					"getDebugInfo": "None",
+					"scriptLinkedService": {
+						"referenceName": "adls_hd_conf_19",
+						"type": "LinkedServiceReference"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "hdinsightclusterv2",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "AWS"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
