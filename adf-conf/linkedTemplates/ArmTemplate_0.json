@@ -218,7 +218,7 @@
 				"annotations": [],
 				"type": "AzureFunction",
 				"typeProperties": {
-					"functionAppUrl": "https://conf19-alert.azurewebsites.net",
+					"functionAppUrl": "https://supernewfunction56.azurewebsites.net",
 					"functionKey": {
 						"type": "SecureString",
 						"value": "[parameters('af_conf19_functionKey')]"
