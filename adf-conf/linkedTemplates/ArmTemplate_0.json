@@ -1,0 +1,711 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-conf"
+		},
+		"AmazonS3_secretAccessKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'secretAccessKey' of 'AmazonS3'"
+		},
+		"abs_conf19_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'abs_conf19'"
+		},
+		"acd_conf19_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'acd_conf19'"
+		},
+		"acd_conf19_table_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'acd_conf19_table'"
+		},
+		"af_conf19_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'af_conf19'"
+		},
+		"hdinsightsconf_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'hdinsightsconf'"
+		},
+		"AmazonS3_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "AKIAJQ6CVW7RZ7EQMWKQ"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://conf19.vault.azure.net/"
+		},
+		"adl_conf19_properties_typeProperties_dataLakeStoreUri": {
+			"type": "string",
+			"defaultValue": "https://conf19.azuredatalakestore.net/webhdfs/v1"
+		},
+		"adl_conf19_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "d7dedc1c-5e28-4c3b-a173-fe24b1923684"
+		},
+		"adl_conf19_properties_typeProperties_subscriptionId": {
+			"type": "string",
+			"defaultValue": "1fca6fdb-1225-4efd-8dcd-1173fe3f4765"
+		},
+		"adl_conf19_properties_typeProperties_resourceGroupName": {
+			"type": "string",
+			"defaultValue": "rg-conf"
+		},
+		"abs_conf19_delete_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "*"
+		},
+		"abs_conf19_delete_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "@dataset().FolderPath"
+		},
+		"abs_hdinsightsconf_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "@dataset().location"
+		},
+		"abs_hdinsightsconf_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datastore"
+		},
+		"abs_hdinsightsconf_bulk_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"abs_hdinsightsconf_bulk_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datastore/input"
+		},
+		"abs_hdinsightsconf_input_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "input/links.csv"
+		},
+		"abs_hdinsightsconf_input_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datastore"
+		},
+		"abs_users_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "convertcsv.csv"
+		},
+		"abs_users_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "users"
+		},
+		"adl_input_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "@concat(dataset().fileName, '.csv')"
+		},
+		"adl_input_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datalake/input"
+		},
+		"adl_input_movies_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "movies.csv"
+		},
+		"adl_input_movies_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datalake/input"
+		},
+		"adl_top10_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "top10RelevanceMovies.csv"
+		},
+		"adl_top10_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "datalake/input"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AmazonS3')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AmazonS3",
+				"typeProperties": {
+					"serviceUrl": "https://s3.eu-north-1.amazonaws.com",
+					"accessKeyId": "[parameters('AmazonS3_properties_typeProperties_accessKeyId')]",
+					"secretAccessKey": {
+						"type": "SecureString",
+						"value": "[parameters('AmazonS3_secretAccessKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_conf19')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('abs_conf19_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/acd_conf19')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('acd_conf19_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/acd_conf19_table')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('acd_conf19_table_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/adl_conf19')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDataLakeStore",
+				"typeProperties": {
+					"dataLakeStoreUri": "[parameters('adl_conf19_properties_typeProperties_dataLakeStoreUri')]",
+					"tenant": "[parameters('adl_conf19_properties_typeProperties_tenant')]",
+					"subscriptionId": "[parameters('adl_conf19_properties_typeProperties_subscriptionId')]",
+					"resourceGroupName": "[parameters('adl_conf19_properties_typeProperties_resourceGroupName')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/af_conf19')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureFunction",
+				"typeProperties": {
+					"functionAppUrl": "https://conf19-alert.azurewebsites.net",
+					"functionKey": {
+						"type": "SecureString",
+						"value": "[parameters('af_conf19_functionKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/hdinsightsconf')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('hdinsightsconf_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AmazonS3forAzure')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AmazonS3",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"location": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AmazonS3Object",
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": "|",
+						"rowDelimiter": "",
+						"nullValue": "\\N",
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": true
+					},
+					"key": {
+						"value": "@dataset().location",
+						"type": "Expression"
+					},
+					"bucketName": "conf19"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AmazonS3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureCosmosTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "acd_conf19_table",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DocumentDbCollection",
+				"structure": [
+					{
+						"name": "id",
+						"type": "Int32"
+					},
+					{
+						"name": "relevance",
+						"type": "Double"
+					},
+					{
+						"name": "tags",
+						"type": "String"
+					},
+					{
+						"name": "title",
+						"type": "String"
+					}
+				],
+				"typeProperties": {
+					"collectionName": "top10RelevanceTagPerMovie"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/acd_conf19_table')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductCategoryJoin')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "abs_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "productjoin",
+						"container": "dataflowoutput"
+					},
+					"columnDelimiter": "|",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/abs_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_conf19_delete')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Connect to your storage store to delete files.",
+				"linkedServiceName": {
+					"referenceName": "abs_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FolderPath": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlob",
+				"typeProperties": {
+					"fileName": "[parameters('abs_conf19_delete_properties_typeProperties_fileName')]",
+					"folderPath": {
+						"value": "[parameters('abs_conf19_delete_properties_typeProperties_folderPath')]",
+						"type": "Expression"
+					},
+					"modifiedDatetimeEnd": {
+						"value": "@addminutes(pipeline().TriggerTime, -1)",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/abs_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_hdinsightsconf')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "hdinsightsconf",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"location": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlob",
+				"typeProperties": {
+					"fileName": {
+						"value": "[parameters('abs_hdinsightsconf_properties_typeProperties_fileName')]",
+						"type": "Expression"
+					},
+					"folderPath": "[parameters('abs_hdinsightsconf_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/hdinsightsconf')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_hdinsightsconf_bulk')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "hdinsightsconf",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureBlob",
+				"typeProperties": {
+					"fileName": "[parameters('abs_hdinsightsconf_bulk_properties_typeProperties_fileName')]",
+					"folderPath": "[parameters('abs_hdinsightsconf_bulk_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/hdinsightsconf')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_hdinsightsconf_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "hdinsightsconf",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureBlob",
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": ",",
+						"rowDelimiter": "",
+						"nullValue": "\\N",
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": false
+					},
+					"fileName": "[parameters('abs_hdinsightsconf_input_properties_typeProperties_fileName')]",
+					"folderPath": "[parameters('abs_hdinsightsconf_input_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/hdinsightsconf')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/abs_users')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "abs_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureBlob",
+				"structure": [
+					{
+						"name": "Id",
+						"type": "String"
+					},
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Email",
+						"type": "String"
+					},
+					{
+						"name": "StreetAddress",
+						"type": "String"
+					},
+					{
+						"name": "City",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					}
+				],
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": "|",
+						"rowDelimiter": "",
+						"quoteChar": "\"",
+						"nullValue": "\\N",
+						"encodingName": null,
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": true
+					},
+					"fileName": "[parameters('abs_users_properties_typeProperties_fileName')]",
+					"folderPath": "[parameters('abs_users_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/abs_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/acd_conf19_movies')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "acd_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DocumentDbCollection",
+				"structure": [
+					{
+						"name": "movieid",
+						"type": "Int32"
+					},
+					{
+						"name": "title",
+						"type": "String"
+					},
+					{
+						"name": "ratings",
+						"type": "Double"
+					},
+					{
+						"name": "imdblink",
+						"type": "String"
+					},
+					{
+						"name": "tmdblink",
+						"type": "String"
+					}
+				],
+				"typeProperties": {
+					"collectionName": "movies"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/acd_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/adl_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adl_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureDataLakeStoreFile",
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": "|",
+						"rowDelimiter": "",
+						"nullValue": "\\N",
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": false
+					},
+					"fileName": {
+						"value": "[parameters('adl_input_properties_typeProperties_fileName')]",
+						"type": "Expression"
+					},
+					"folderPath": "[parameters('adl_input_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adl_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/adl_input_movies')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adl_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDataLakeStoreFile",
+				"structure": [
+					{
+						"name": "Prop_0",
+						"type": "String",
+						"description": "movieid"
+					},
+					{
+						"name": "Prop_1",
+						"type": "String",
+						"description": "movietitle"
+					},
+					{
+						"name": "Prop_2",
+						"type": "String",
+						"description": "movieratings"
+					},
+					{
+						"name": "Prop_3",
+						"type": "String",
+						"description": "imdbid"
+					},
+					{
+						"name": "Prop_4",
+						"type": "String",
+						"description": "tmdbid"
+					},
+					{
+						"name": "Prop_5",
+						"type": "String",
+						"description": "movieimdblink"
+					},
+					{
+						"name": "Prop_6",
+						"type": "String",
+						"description": "movietmdblink"
+					}
+				],
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": ",",
+						"rowDelimiter": "\n",
+						"quoteChar": "\"",
+						"nullValue": "\\N",
+						"encodingName": null,
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": false
+					},
+					"fileName": "[parameters('adl_input_movies_properties_typeProperties_fileName')]",
+					"folderPath": "[parameters('adl_input_movies_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adl_conf19')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/adl_top10')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adl_conf19",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDataLakeStoreFile",
+				"structure": [
+					{
+						"name": "Prop_0",
+						"type": "String",
+						"description": "movieid"
+					},
+					{
+						"name": "Prop_1",
+						"type": "String",
+						"description": "relevance"
+					},
+					{
+						"name": "Prop_2",
+						"type": "String",
+						"description": "tags"
+					},
+					{
+						"name": "Prop_3",
+						"type": "String",
+						"description": "title"
+					}
+				],
+				"typeProperties": {
+					"format": {
+						"type": "TextFormat",
+						"columnDelimiter": ",",
+						"rowDelimiter": "\n",
+						"quoteChar": "\"",
+						"nullValue": "\\N",
+						"encodingName": null,
+						"treatEmptyAsNull": true,
+						"skipLineCount": 0,
+						"firstRowAsHeader": false
+					},
+					"fileName": "[parameters('adl_top10_properties_typeProperties_fileName')]",
+					"folderPath": "[parameters('adl_top10_properties_typeProperties_folderPath')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adl_conf19')]"
+			]
+		}
+	]
+}

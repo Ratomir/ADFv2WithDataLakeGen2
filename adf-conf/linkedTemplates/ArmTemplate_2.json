@@ -1,0 +1,1542 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-conf"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyDataToAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "StartCopyToAnalytics1",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_insertIntoLogs]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"startDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "EndCopyToAnalytics",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "If Condition1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "If Condition2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_finishAdf]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"endDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "IfFileExistsMovies",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "StartCopyToAnalytics1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "adlsv2_binaryfile",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "hive/warehouse/managed/movies.db/fullmovies/base_0000001/000000_0"
+								}
+							},
+							"fieldList": [
+								"exists"
+							]
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "IfFileExistsMovies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@activity('IfFileExistsMovies').output.exists",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "CopyToAnalytics",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureBlobFSSource",
+											"recursive": true
+										},
+										"sink": {
+											"type": "AzureDataLakeStoreSink"
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "adlsv2_binaryfile",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": "hive/warehouse/managed/movies.db/fullmovies/base_0000001/000000_0"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "adl_input",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": "movies"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "IfFileExistsTop10RelevanceMovies",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "StartCopyToAnalytics1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "adlsv2_binaryfile",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "hive/warehouse/managed/movies.db/top10relevancetagpermovie/base_0000001/000000_0"
+								}
+							},
+							"fieldList": [
+								"exists"
+							]
+						}
+					},
+					{
+						"name": "If Condition2",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "IfFileExistsTop10RelevanceMovies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@activity('IfFileExistsTop10RelevanceMovies').output.exists",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Copy Data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureBlobFSSource",
+											"recursive": true
+										},
+										"sink": {
+											"type": "AzureDataLakeStoreSink"
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "adlsv2_binaryfile",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": "hive/warehouse/managed/movies.db/top10relevancetagpermovie/base_0000001/000000_0"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "adl_input",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": "top10RelevanceMovies"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyDataToTable')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Data to Table",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "StartCopyToTable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureDataLakeStoreSource",
+								"recursive": true
+							},
+							"sink": {
+								"type": "AzureTableSink",
+								"azureTableInsertType": "merge",
+								"azureTablePartitionKeyName": "id",
+								"writeBatchSize": 10000
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"columnMappings": {
+									"Prop_0": "id",
+									"Prop_1": "relevance",
+									"Prop_2": "tags",
+									"Prop_3": "title"
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "adl_top10",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "at_top10RelevanceTagPerMovie",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "StartCopyToTable",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_insertIntoLogs]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"startDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "EndCopyToTable",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Copy Data to Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_finishAdf]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"endDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyFileFromAWS3Bucket')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Links",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "links.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/links.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/links.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "Movies",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "movies.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/movies.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/movies.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "Genome-scores",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "genome-scores.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/genome-scores.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/genome-scores.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "Tags",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "tags.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/tags.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/tags.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "Genome-tags",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "genome-tags.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/genome-tags.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/genome-tags.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "Ratings",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "loadFile",
+								"value": "ratings.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"sink": {
+								"type": "BlobSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/ratings.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "abs_hdinsightsconf",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "input/ratings.csv"
+								}
+							}
+						]
+					},
+					{
+						"name": "LoadDataIntoTables",
+						"type": "HDInsightHive",
+						"dependsOn": [
+							{
+								"activity": "Links",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Movies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Genome-scores",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Tags",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Genome-tags",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Ratings",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"scriptPath": "scripts/loadDataFromFiles.hql",
+							"getDebugInfo": "Always",
+							"scriptLinkedService": {
+								"referenceName": "abs_conf19",
+								"type": "LinkedServiceReference"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "hdinsight",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"folder": {
+					"name": "AWS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Demo')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Data",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureDataLakeStoreSource",
+								"recursive": true
+							},
+							"sink": {
+								"type": "SqlSink",
+								"writeBatchSize": 10000,
+								"preCopyScript": "TRUNCATE TABLE dbo.StageUsers;"
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"columnMappings": {
+									"Name": "Name",
+									"Email": "Email",
+									"StreetAddress": "StreetAddress",
+									"City": "City",
+									"Country": "Country",
+									"Id": "UserId"
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "adl_users",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "asd_stageusers",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ForEach')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetConfig",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": false
+							},
+							"dataset": {
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "config/files.csv"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetConfig",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetConfig').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Copy_From_AWS",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "FileSystemSource",
+											"recursive": false
+										},
+										"sink": {
+											"type": "AzureBlobFSSink"
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "AmazonS3forAzure",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@concat('forazure/',item().file_name, '.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "adlsv2_binaryfile",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@concat('input/',item().file_name,'.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"folder": {
+					"name": "AWS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Product_ProductCategory_InnerJoin')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ast_product",
+								"type": "DatasetReference"
+							},
+							"name": "product"
+						},
+						{
+							"dataset": {
+								"referenceName": "ast_productcategory",
+								"type": "DatasetReference"
+							},
+							"name": "productcategory"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ProductCategoryJoin",
+								"type": "DatasetReference"
+							},
+							"name": "ProductCategorySink"
+						},
+						{
+							"dataset": {
+								"referenceName": "ast_ProductWithCategory",
+								"type": "DatasetReference"
+							},
+							"name": "SinkToSQL"
+						}
+					],
+					"transformations": [
+						{
+							"name": "JoinProduct"
+						},
+						{
+							"name": "SortJoin"
+						},
+						{
+							"name": "Filter1"
+						}
+					],
+					"script": "source(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> product\nsource(output(\n\t\tProductCategoryID as integer,\n\t\tParentProductCategoryID as integer,\n\t\tName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> productcategory\nproduct, productcategory join(product@ProductCategoryID == productcategory@ProductCategoryID,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> JoinProduct\nJoinProduct sort(desc(ProductModelID, true)) ~> SortJoin\nSortJoin filter(StandardCost > 1000) ~> Filter1\nFilter1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tmapColumn(\n\t\tProductID,\n\t\tName = product@Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize,\n\t\tWeight,\n\t\tProductCategoryID = product@ProductCategoryID,\n\t\tProductModelID,\n\t\tSellStartDate,\n\t\tSellEndDate,\n\t\tDiscontinuedDate,\n\t\tThumbNailPhoto,\n\t\tThumbnailPhotoFileName,\n\t\tModifiedDate = product@ModifiedDate,\n\t\tParentProductCategoryID,\n\t\tPC_Name = productcategory@Name,\n\t\tPC_ModifiedDate = productcategory@ModifiedDate\n\t)) ~> ProductCategorySink\nFilter1 sink(input(\n\t\tId as integer,\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tLastPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as double,\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as string,\n\t\tThumbnailPhotoFileName as string,\n\t\tModifiedDate as timestamp,\n\t\tParentProductCategoryID as integer,\n\t\tPC_Name as string,\n\t\tPC_ModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tProductID,\n\t\tName = product@Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tLastPrice = ListPrice,\n\t\tSize,\n\t\tWeight,\n\t\tProductCategoryID = product@ProductCategoryID,\n\t\tProductModelID,\n\t\tSellStartDate,\n\t\tSellEndDate,\n\t\tDiscontinuedDate,\n\t\tThumbnailPhotoFileName,\n\t\tModifiedDate = product@ModifiedDate,\n\t\tParentProductCategoryID,\n\t\tPC_Name = productcategory@Name,\n\t\tPC_ModifiedDate = productcategory@ModifiedDate\n\t)) ~> SinkToSQL"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BulkCopy')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "BulkCopy",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "StartBulkCopyAWS",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "FileSystemSource",
+								"recursive": true
+							},
+							"sink": {
+								"type": "AzureBlobFSSink"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonS3forAzure",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": "forazure/*"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "adlsv2_binatcopy_input",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "LoadData",
+						"type": "HDInsightHive",
+						"dependsOn": [
+							{
+								"activity": "BulkCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "description",
+								"value": "Data has been loaded"
+							}
+						],
+						"typeProperties": {
+							"scriptPath": "scripts/loadDataFromFiles.hql",
+							"getDebugInfo": "None",
+							"scriptLinkedService": {
+								"referenceName": "adls_hd_conf_19",
+								"type": "LinkedServiceReference"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "hdinsightclusterv2",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Prepare movies",
+						"type": "HDInsightHive",
+						"dependsOn": [
+							{
+								"activity": "LoadData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "description",
+								"value": "Movies loaded"
+							}
+						],
+						"typeProperties": {
+							"scriptPath": "scripts/prepareMovies.hql",
+							"getDebugInfo": "None",
+							"scriptLinkedService": {
+								"referenceName": "adls_hd_conf_19",
+								"type": "LinkedServiceReference"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "hdinsightclusterv2",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "StartBulkCopyAWS",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_insertIntoLogs]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"startDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "EndBulkCopy",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Top 10 relevance movies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_finishAdf]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"endDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute CopyDataToAnaytics",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "EndBulkCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "CopyDataToAnalytics",
+								"type": "PipelineReference"
+							},
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Top 10 relevance movies",
+						"type": "HDInsightHive",
+						"dependsOn": [
+							{
+								"activity": "Prepare movies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "description",
+								"value": "Top10 movies founded"
+							}
+						],
+						"typeProperties": {
+							"scriptPath": "scripts/findTop10ReleavanceTagPerMovie.hql",
+							"getDebugInfo": "None",
+							"scriptLinkedService": {
+								"referenceName": "adls_hd_conf_19",
+								"type": "LinkedServiceReference"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "hdinsightclusterv2",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"folder": {
+					"name": "AWS"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/CopyDataToAnalytics')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TestDataFlow')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Product_ProductCategory_InnerJoin",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "StartDataFlow",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Product_ProductCategory_InnerJoin",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"product": {},
+									"productcategory": {},
+									"ProductCategorySink": {},
+									"SinkToSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "StartDataFlow",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_insertIntoLogs]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"startDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "EndDataFlow",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Product_ProductCategory_InnerJoin",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_finishAdf]",
+							"storedProcedureParameters": {
+								"dataFactoryName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"endDate": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd hh:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "asd_LogADF",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"folder": {
+					"name": "DataFlow"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Product_ProductCategory_InnerJoin')]"
+			]
+		}
+	]
+}

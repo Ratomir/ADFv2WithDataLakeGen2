@@ -1,0 +1,135 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-conf"
+		},
+		"AmazonS3_secretAccessKey": {
+			"value": ""
+		},
+		"abs_conf19_connectionString": {
+			"value": ""
+		},
+		"acd_conf19_connectionString": {
+			"value": ""
+		},
+		"acd_conf19_table_connectionString": {
+			"value": ""
+		},
+		"af_conf19_functionKey": {
+			"value": ""
+		},
+		"hdinsightsconf_connectionString": {
+			"value": ""
+		},
+		"abs_conf19_delete_properties_typeProperties_fileName": {
+			"value": "*"
+		},
+		"abs_conf19_delete_properties_typeProperties_folderPath": {
+			"value": "@dataset().FolderPath"
+		},
+		"abs_hdinsightsconf_properties_typeProperties_fileName": {
+			"value": "@dataset().location"
+		},
+		"abs_hdinsightsconf_properties_typeProperties_folderPath": {
+			"value": "datastore"
+		},
+		"abs_hdinsightsconf_bulk_properties_typeProperties_fileName": {
+			"value": ""
+		},
+		"abs_hdinsightsconf_bulk_properties_typeProperties_folderPath": {
+			"value": "datastore/input"
+		},
+		"abs_hdinsightsconf_input_properties_typeProperties_fileName": {
+			"value": "input/links.csv"
+		},
+		"abs_hdinsightsconf_input_properties_typeProperties_folderPath": {
+			"value": "datastore"
+		},
+		"abs_users_properties_typeProperties_fileName": {
+			"value": "convertcsv.csv"
+		},
+		"abs_users_properties_typeProperties_folderPath": {
+			"value": "users"
+		},
+		"adl_input_properties_typeProperties_fileName": {
+			"value": "@concat(dataset().fileName, '.csv')"
+		},
+		"adl_input_properties_typeProperties_folderPath": {
+			"value": "datalake/input"
+		},
+		"adl_input_movies_properties_typeProperties_fileName": {
+			"value": "movies.csv"
+		},
+		"adl_input_movies_properties_typeProperties_folderPath": {
+			"value": "datalake/input"
+		},
+		"adl_top10_properties_typeProperties_fileName": {
+			"value": "top10RelevanceMovies.csv"
+		},
+		"adl_top10_properties_typeProperties_folderPath": {
+			"value": "datalake/input"
+		},
+		"adl_users_properties_typeProperties_fileName": {
+			"value": "users.csv"
+		},
+		"adl_users_properties_typeProperties_folderPath": {
+			"value": "user"
+		},
+		"adlsv2_binaryfile_properties_typeProperties_fileName": {
+			"value": "@dataset().location"
+		},
+		"adlsv2_binaryfile_properties_typeProperties_folderPath": {
+			"value": "datastore"
+		},
+		"adlsv2_binatcopy_input_properties_typeProperties_fileName": {
+			"value": ""
+		},
+		"adlsv2_binatcopy_input_properties_typeProperties_folderPath": {
+			"value": "datastore/input"
+		},
+		"AmazonS3_properties_typeProperties_accessKeyId": {
+			"value": "AKIAJQ6CVW7RZ7EQMWKQ"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://conf19.vault.azure.net/"
+		},
+		"adl_conf19_properties_typeProperties_dataLakeStoreUri": {
+			"value": "https://conf19.azuredatalakestore.net/webhdfs/v1"
+		},
+		"adl_conf19_properties_typeProperties_tenant": {
+			"value": "d7dedc1c-5e28-4c3b-a173-fe24b1923684"
+		},
+		"adl_conf19_properties_typeProperties_subscriptionId": {
+			"value": "1fca6fdb-1225-4efd-8dcd-1173fe3f4765"
+		},
+		"adl_conf19_properties_typeProperties_resourceGroupName": {
+			"value": "rg-conf"
+		},
+		"adls_hd_conf_19_properties_typeProperties_url": {
+			"value": "https://hdinsightsconfv2.dfs.core.windows.net/"
+		},
+		"asd_LogADF_properties_typeProperties_connectionString_secretName": {
+			"value": "sql-logadf"
+		},
+		"asd_conf19_properties_typeProperties_connectionString_secretName": {
+			"value": "sql-awadf"
+		},
+		"ats_conf19_properties_typeProperties_connectionString_secretName": {
+			"value": "asc-conf19"
+		},
+		"hdinsight_properties_typeProperties_userName": {
+			"value": "ratomir"
+		},
+		"hdinsightclusterv2_properties_typeProperties_userName": {
+			"value": "ratomir"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
