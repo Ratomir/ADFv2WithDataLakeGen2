@@ -1,0 +1,9 @@
+{
+	"name": "testdfrvs",
+	"location": "northeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f2055157-24c3-4bd9-964b-b4127ed0bf07",
+		"tenantId": "d7dedc1c-5e28-4c3b-a173-fe24b1923684"
+	}
+}
